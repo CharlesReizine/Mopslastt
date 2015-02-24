@@ -3,67 +3,117 @@ classdef Arbre <handle
         Matrice_centroids;
         fils;
         nbre_fils;
+        datas;
     end
     methods
-        function self= Arbre(taille)
+        function self= Arbre()%Constructeur par défaut
             self.Matrice_centroids=NaN;
-            self.fils=cell(min(taille,10),1);
-            self.nbre_fils=min(taille,10);
+            %self.fils=cell(min(taille,10),1)
+            %self.nbre_fils=min(taille,10);
+            self.fils=NaN;
+            self.nbre_fils=0;
+            self.datas=NaN;
         end
-        function Descripteurs_tree(self,Grande_matrice,profondeur)
+        function Descripteurs_tree(self,Grande_matrice,Liste_images,profondeur,max_depth)
            
-            if profondeur==5 || self.nbre_fils==1
-                self.fils=Grande_matrice;
-                self.nbre_fils=0;
+            [h taille]=size(Grande_matrice.matrice_double);
+            
+            if profondeur==max_depth  || taille<10
+                
+                self.datas=Liste_images;
+                self.datas.valid();
+                self.datas=self.datas.liste_string;
+                
+              
             else     
             
             
-                [centroids,sous_matrice]  = Construit_noeud(Grande_matrice);
+                [centroids,sous_matrice,Liste_images_finales]  = Construit_noeud(Grande_matrice,Liste_images);
                 self.Matrice_centroids=centroids';
-                
-                [w,h]=size(centroids);
-                for i=1:h
+                [h,w]=size(centroids);
+                self.nbre_fils=w;
+                self.fils=cell(w,1);
+                for i=1:w
                 
                     
-                    fils_tempo=Arbre(h);
-                    
-                    fils_tempo.Descripteurs_tree(sous_matrice{i},profondeur+1);
+                    fils_tempo=Arbre();
+                    fils_tempo.Descripteurs_tree(sous_matrice{i},Liste_images_finales{i},profondeur+1,max_depth);
                     self.fils{i}=fils_tempo;
+                    
                 end
             end
         end
         
-        function Liste_descripteurs=Recherche_descripteurs(self,descripteur)
-            while self.nbre_fils>0
-                truc=size(self.Matrice_centroids);
-                
+        function datas=Trouve_feuille(self,descripteur)
+            if self.nbre_fils==10
                 bonne_branche=dsearchn(double(self.Matrice_centroids),double(descripteur'));
-                Liste_descripteurs=self.fils{bonne_branche}.Recherche_descripteurs(descripteur);
-                if truc>1
-                    truc
-                    bonne_branche
-                self.nbre_fils
-                end
-                bonne_branche;
-                self.nbre_fils;
+                Son=self.fils{bonne_branche};
+                datas=Son.Trouve_feuille(descripteur);
+            else
+                datas=self.datas;
             end
-            Liste_descripteurs=self.fils;
-                
         end
-        function Liste_position=Recherche_image(self,image,matrice_de_reference)
-            Matrice_descripteur = Image_descripts(image);
-            [h w]=size(Matrice_descripteur);
-            Liste_descripteurs=[];
+        function Liste_images_correspondantes=Trouve_image(self,image)
+            descripteurs=Image_descripts(image);
+            [h w]=size(descripteurs);
+            Liste_images=containers.Map();
+            Tableau_frequence=[];
+            Tableau_correspondance=[];
             for i=1:w
-                descripteur=Matrice_descripteur(:,i);
-                petite_matrice=self.Recherche_descripteurs(descripteur);
-                Liste_descripteurs=horzcat(Liste_descripteurs,petite_matrice);
-                1
+                descript=descripteurs(:,i);
+                donnees=self.Trouve_feuille(descript); % datas est un cell contenant le nom des listes des images de la feuille
+                [taille1, taille2]=size(donnees); % on parcourt toute la feuille
+                if taille1*taille2>1 % dans le cas où les données sont NaN, la feuille ne contient qu'un élément. (on perd les feuilles ne contenant qu'un descripteur)
+                
+                    for j=1:taille2 
+                        %taille2
+                       %j
+                        nom_photo=donnees{j};
+                        if Liste_images.isKey(nom_photo)
+                            position=Liste_images(nom_photo);
+                            Tableau_frequence(position)=Tableau_frequence(position)+1;
+                        else
+                            Tableau_frequence=[Tableau_frequence 1];%Concatenation
+                            taille=size(Tableau_frequence);
+                            taille=taille(2);
+                            Liste_images(nom_photo)=taille;
+                            Tableau_correspondance=[Tableau_correspondance {nom_photo}];%Concatenation
+                        end
+                    end
+                end
                 
             end
-            Liste_position=dsearchn(matrice_de_reference',Liste_descripteurs');
-           
+            
+            [tri ordre]=sort(Tableau_frequence,'descend');
+            ordre=ordre(1:5);
+            
+            Liste_images_correspondantes=Tableau_correspondance(ordre);
+            
+                
+
         end
+         function supprime_feuille(self,seuil) % nous allons supprimer les feuilles possédant plus de seuils éléments
+            if self.nbre_fils==0 % si on est sur une feuille
+               taille=size(self.datas);
+               taille=taille(2);
+               if taille>seuil
+                   self.datas=NaN;
+               
+                   taille
+                   seuil
+                else
+               
+               end
+            else 
+                for i=1:self.nbre_fils
+                    interm=self.fils{i};
+                    interm.supprime_feuille(seuil);
+                    self.fils{i}=interm;
+                end
+                
+            end 
+        end       
+       
         
                 
     end
