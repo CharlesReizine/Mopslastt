@@ -4,16 +4,19 @@
 %database_creator(Data_base);
 
 %save('Database.mat');%enregistre la base de données
-[Grande_matrice,Liste_image]=database_creator();
+[Grande_matrice,Liste_image,Quantite_descripteurs_image]=database_creator();
+disp(['Data base crée']);
 tree=Arbre();
 taille=size(Grande_matrice.matrice_double);
 taille=taille(2);
-profondeur_max=floor(log10(taille/100));
+profondeur_max=floor(log10(taille/10));
+disp(['On attaque la construction du tree']);
 tree.Descripteurs_tree(Grande_matrice,Liste_image,0,profondeur_max);
-save('GrandArbre.mat','tree');%enregistre la base de données
-%tree.supprime_feuille(100);
+disp(['On a terminé la construction du tree']);
+%save('GrandArbre.mat','tree');%enregistre la base de données
+%tree.supprime_feuille(200);
 Irgb = double(imread('15.jpg'));
-image_correspondante=tree.Trouve_image(Irgb);%J'ai mis des accolades dans Construit_noeud
+image_correspondante=tree.Trouve_image(Irgb,Quantite_descripteurs_image);%J'ai mis des accolades dans Construit_noeud
 %sinon on met des cell dans des cell d'où les apostrophes quand on regarde
 %le nom
 

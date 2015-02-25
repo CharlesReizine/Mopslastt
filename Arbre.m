@@ -53,12 +53,15 @@ classdef Arbre <handle
                 datas=self.datas;
             end
         end
-        function Liste_images_correspondantes=Trouve_image(self,image)
+        function Liste_images_correspondantes=Trouve_image(self,image,Quantite_descripteurs_image)
             descripteurs=Image_descripts(image);
             [h w]=size(descripteurs);
             Liste_images=containers.Map();
             Tableau_frequence=[];
             Tableau_correspondance=[];
+            if w<100 
+                disp(['La reconnaisance va être délicate, quantité de descripteurs : ' num2str(w)]);
+            end
             for i=1:w
                 descript=descripteurs(:,i);
                 donnees=self.Trouve_feuille(descript); % datas est un cell contenant le nom des listes des images de la feuille
@@ -83,7 +86,12 @@ classdef Arbre <handle
                 end
                 
             end
-            
+            for i=1:length(Tableau_frequence) %on va pondérer 
+                nom=Tableau_correspondance(i);
+                
+                Qte=Quantite_descripteurs_image(char(nom)); %char permet de transformer 'nom' en nom
+                Tableau_frequence(i)=Tableau_frequence(i)/Qte;
+            end
             [tri ordre]=sort(Tableau_frequence,'descend');
             ordre=ordre(1:5);
             
