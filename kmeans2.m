@@ -164,13 +164,15 @@ switch distance
             error(message('stats:kmeans:ZeroDataForCos'));
         end
         X = X ./ Xnorm(:,ones(1,p));
+%%Distance de Mahalanobis
     case 'mahal'
         origine=zeros(size(X));
         Xnorm = mahal(X,origine);
         if any(min(Xnorm) <= eps(max(Xnorm)))
-            error(message('stats:kmeans:ZeroDataForCos'));
+            error(message('stats:kmeans:ZeroDataForMahal'));
         end
         X = X ./ Xnorm(:,ones(1,p));
+%%
     case 'correlation'
         X = bsxfun(@minus, X, mean(X,2));
         Xnorm = sqrt(sum(X.^2, 2));
